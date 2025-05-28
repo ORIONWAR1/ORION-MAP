@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <title>Carte ORION - Avancées et Repères</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1Ijoib3Jpb24xMyIsImEiOiJjbTllZzFqdmEwajFlMm1zYXhicWM0NHFlIn0.6uXFvOnzYip_R3XF8JvUVQ';
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        center: [35, 48],
+        zoom: 4,
+        projection: 'globe'
+    });
+
+    map.on('style.load', () => {
+        map.setFog({}); // pour activer le globe
+    });
+
+    // Chargement de ton fichier GeoJSON (doit être nommé data.geojson et placé dans le même dossier)
+    fetch('data.geojson')
+        .then(response => response.json())
+        .then(data => {
+            map.addSource('geojson-data', {
+                type: 'geojson',
+                data: data
+            });
+
+            map.addLayer({
+                id: 'points',
+                type: 'symbol',
+                source: 'geojson-data',
+                layout: {
+                    'icon-image': 'marker-15',
+                    'icon-size': 1.5,
+                    'text-field': ['get', 'title'],
+                    'text-offset': [0, 1.2],
+                    'text-anchor': 'top'
+                }
+            });
+
+            data.features.forEach(function(marker) {
+                const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(marker.properties.description || '');
+                new mapboxgl.Marker()
+                    .setLngLat(marker.geometry.coordinates)
+                    .setPopup(popup)
+                    .addTo(map);
+            });
+        });
+</script>
+</body>
+</html>
